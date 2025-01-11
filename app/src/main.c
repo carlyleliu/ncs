@@ -11,44 +11,72 @@
 #include <app/drivers/blink.h>
 #include <app_version.h>
 
-/* 1000 msec = 1 sec */
-#define SLEEP_TIME_MS   1000
-
-/* The devicetree node identifier for the "led0" alias. */
-#define LED0_NODE DT_ALIAS(led0)
+#include <zephyr/bluetooth/bluetooth.h>
+#include <zephyr/bluetooth/conn.h>
+#include <zephyr/bluetooth/hci.h>
 
 LOG_MODULE_REGISTER(main, CONFIG_APP_LOG_LEVEL);
 
-/*
- * A build error on this line means your board is unsupported.
- * See the sample documentation for information on how to fix this.
- */
-static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
+static void connected(struct bt_conn *conn, uint8_t err)
+{
+	if (err) {
+		printk("Connection failed, err 0x%02x %s\n", err, bt_hci_err_to_str(err));
+		return;
+	}
+
+	char addr_str[BT_ADDR_LE_STR_LEN];
+
+	bt_addr_le_to_str(bt_conn_get_dst(conn), addr_str, sizeof(addr_str));
+	printk("connected to %s\n", addr_str);
+}
+
+static void disconnected(struct bt_conn *conn, uint8_t reason)
+{
+	char addr_str[BT_ADDR_LE_STR_LEN];
+
+	bt_addr_le_to_str(bt_conn_get_dst(conn), addr_str, sizeof(addr_str));
+
+	printk("disconnected %s, reason %u\n", addr_str, reason);
+
+	struct bt_conn_info connection_info;
+	int err;
+
+	err = bt_conn_get_info(conn, &connection_info);
+
+	if (err) {
+		printk("Failed to get conn info (err %d)\n", err);
+		return;
+	}
+
+	/* Get the ID of the disconnected advertiser. */
+	uint8_t id_current = connection_info.id;
+
+	printk("Advertiser %d disconnected\n", id_current);
+}
+
+static struct bt_conn_cb conn_callbacks = {
+	.connected = connected,
+	.disconnected = disconnected,
+};
+
 
 int main(void)
 {
-	int ret;
-	bool led_state = true;
+    int err;
 
-	if (!gpio_is_ready_dt(&led)) {
+	err = bt_enable(NULL);
+	if (err) {
+		printk("Bluetooth init failed (err %d)\n", err);
 		return 0;
 	}
 
-	ret = gpio_pin_configure_dt(&led, GPIO_OUTPUT_ACTIVE);
-	if (ret < 0) {
+	/* Register connection callbacks. */
+	err = bt_conn_cb_register(&conn_callbacks);
+	if (err) {
+		printk("Conn callback register failed (err %d)\n", err);
 		return 0;
 	}
 
-	while (1) {
-		ret = gpio_pin_toggle_dt(&led);
-		if (ret < 0) {
-			return 0;
-		}
-
-		led_state = !led_state;
-		printf("LED state: %s\n", led_state ? "ON" : "OFF");
-		k_msleep(SLEEP_TIME_MS);
-	}
-	return 0;
+	printk("Bluetooth initialized\n");
 }
 
