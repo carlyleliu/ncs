@@ -18,6 +18,7 @@ list(APPEND BOARD_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
 project(app)
 
 add_subdirectory(peripherals)
+add_subdirectory(ble)
 
 file(GLOB application_sources src/*.c)
 target_sources(app PRIVATE ${application_sources})

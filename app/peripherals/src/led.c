@@ -32,7 +32,6 @@ int led_thread_entry_point(void* unused1, void* unused2, void* unused3)
 	int ret;
 	bool led_state = true;
 
-    LOG_MODULE_DECLARE(led_thread, LOG_LEVEL_DBG);
 	if (!gpio_is_ready_dt(&led)) {
 		return 0;
 	}

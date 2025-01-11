@@ -17,6 +17,7 @@
 
 LOG_MODULE_REGISTER(main, CONFIG_APP_LOG_LEVEL);
 
+#if 0
 static void connected(struct bt_conn *conn, uint8_t err)
 {
 	if (err) {
@@ -58,10 +59,11 @@ static struct bt_conn_cb conn_callbacks = {
 	.connected = connected,
 	.disconnected = disconnected,
 };
-
+#endif
 
 int main(void)
 {
+#if 0
     int err;
 
 	err = bt_enable(NULL);
@@ -78,5 +80,7 @@ int main(void)
 	}
 
 	printk("Bluetooth initialized\n");
+#endif
+    printk("main start\n");
 }
 
