@@ -77,9 +77,12 @@ static bool adv_permission;
 int nfc_pair_thread_entry_point(void *, void *, void *);
 
 LOG_MODULE_REGISTER(nfc_pair_thread, LOG_LEVEL_INF);
+
+#if 0
 K_THREAD_DEFINE(nfc_pair_tid, NFC_PAIR_THREAD_STACK_SIZE,
                 nfc_pair_thread_entry_point, NULL, NULL, NULL,
                 NFC_PAIR_THREAD_PRIORITY, 0, 0);
+#endif
 
 static int tk_value_generate(void)
 {
